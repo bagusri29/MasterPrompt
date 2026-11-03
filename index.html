@@ -1,0 +1,1154 @@
+```html
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anatomy Prompt Builder - Structuring Master Prompts</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              900: '#1e3a8a',
+            },
+            role: '#3b82f6',       /* Blue */
+            task: '#f59e0b',       /* Orange/Amber */
+            context: '#10b981',    /* Green/Emerald */
+            reasoning: '#f43f5e',  /* Red/Rose */
+            stop: '#d946ef',       /* Pink/Fuchsia */
+            output: '#8b5cf6',     /* Purple/Indigo */
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    .anatomy-card {
+      transition: all 0.2s ease-in-out;
+    }
+    .anatomy-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .border-role { border-color: #3b82f6; }
+    .border-task { border-color: #f59e0b; }
+    .border-context { border-color: #10b981; }
+    .border-reasoning { border-color: #f43f5e; }
+    .border-stop { border-color: #d946ef; }
+    .border-output { border-color: #8b5cf6; }
+
+    .text-role { color: #60a5fa; }
+    .text-task { color: #fbbf24; }
+    .text-context { color: #34d399; }
+    .text-reasoning { color: #fb7185; }
+    .text-stop { color: #e879f9; }
+    .text-output { color: #c084fc; }
+
+    .bg-role-subtle { background-color: rgba(59, 130, 246, 0.08); }
+    .bg-task-subtle { background-color: rgba(245, 158, 11, 0.08); }
+    .bg-context-subtle { background-color: rgba(16, 185, 129, 0.08); }
+    .bg-reasoning-subtle { background-color: rgba(244, 63, 94, 0.08); }
+    .bg-stop-subtle { background-color: rgba(217, 70, 239, 0.08); }
+    .bg-output-subtle { background-color: rgba(139, 92, 246, 0.08); }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Main Navbar -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-lg shadow-brand-500/20">
+          <i class="fa-solid fa-wand-magic-sparkles text-white text-lg"></i>
+        </div>
+        <div>
+          <h1 class="font-extrabold text-lg sm:text-xl tracking-tight text-white flex items-center gap-2">
+            Anatomy Prompt Builder
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/20">Claude Framework</span>
+          </h1>
+          <p class="text-xs text-slate-400 hidden sm:block">Konversi prompt singkat menjadi Master Prompt berstruktur 6 Anatomi</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- API Key Settings Button -->
+        <button id="btn-show-settings" class="text-xs sm:text-sm font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg transition-all flex items-center gap-2 border border-slate-700">
+          <i class="fa-solid fa-key text-emerald-400"></i>
+          <span class="hidden sm:inline">API Key</span>
+          <span id="api-key-indicator" class="w-2 h-2 rounded-full bg-rose-500"></span>
+        </button>
+
+        <button id="btn-show-guide" class="text-xs sm:text-sm font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg transition-all flex items-center gap-2 border border-slate-700">
+          <i class="fa-solid fa-circle-info text-brand-400"></i>
+          <span class="hidden sm:inline">Panduan</span>
+        </button>
+        <button id="btn-show-library" class="text-xs sm:text-sm font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg transition-all flex items-center gap-2 border border-slate-700">
+          <i class="fa-solid fa-bookmark text-amber-400"></i>
+          <span class="hidden sm:inline">Perpustakaan</span>
+          <span id="saved-count-badge" class="bg-slate-700 text-xs px-1.5 py-0.2 rounded-full">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
+
+    <!-- Top Input Card -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
+      <div class="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-pen-nib text-brand-400"></i>
+            Masukkan Prompt Singkat atau Ide Utama
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1">Tuliskan apa yang ingin Anda minta dari AI secara bebas, AI akan melengkapi & menstrukturkannya otomatis.</p>
+        </div>
+
+        <!-- Quick Presets Dropdown -->
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-400 whitespace-nowrap hidden sm:inline">Contoh Cepat:</span>
+          <div class="flex flex-wrap gap-1.5" id="preset-pills">
+            <button data-preset="saas-launch" class="preset-btn text-xs bg-slate-800 hover:bg-brand-900/40 hover:text-brand-300 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700 transition">
+              🚀 Peluncuran SaaS
+            </button>
+            <button data-preset="python-mentor" class="preset-btn text-xs bg-slate-800 hover:bg-brand-900/40 hover:text-brand-300 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700 transition">
+              🐍 Mentor Python
+            </button>
+            <button data-preset="copywriting" class="preset-btn text-xs bg-slate-800 hover:bg-brand-900/40 hover:text-brand-300 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700 transition">
+              ✍️ Landing Page Copy
+            </button>
+            <button data-preset="data-analyst" class="preset-btn text-xs bg-slate-800 hover:bg-brand-900/40 hover:text-brand-300 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700 transition">
+              📊 Analisis Bisnis
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Textarea Input Area -->
+      <div class="relative">
+        <textarea id="user-input-prompt" rows="3" class="w-full bg-slate-950 text-slate-100 placeholder-slate-500 p-4 rounded-xl border border-slate-700/80 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none text-sm leading-relaxed transition resize-none font-sans" placeholder="Contoh: Buatkan strategi pemasaran 90 hari untuk aplikasi manajemen tugas AI khusus founder startup lean budget..."></textarea>
+        
+        <div class="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <!-- Controls -->
+          <div class="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
+            <div class="flex items-center gap-1.5">
+              <label for="select-language" class="text-slate-400">Bahasa Output:</label>
+              <select id="select-language" class="bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 outline-none focus:border-brand-500">
+                <option value="id">Bahasa Indonesia</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <label for="select-tone" class="text-slate-400">Gaya Bahasa:</label>
+              <select id="select-tone" class="bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 outline-none focus:border-brand-500">
+                <option value="professional">Profesional & Rigoris</option>
+                <option value="creative">Kreatif & Inovatif</option>
+                <option value="concise">Ringkas & Langsung</option>
+                <option value="academic">Akademis & Analitis</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Submit Action Button -->
+          <button id="btn-generate-master" class="bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-semibold text-sm px-6 py-2.5 rounded-xl transition shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Analisis & Buat Master Prompt</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Workspace Main Grid (Master Prompt Architecture & Preview) -->
+    <section id="workspace-section" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- Left Column: 6 Anatomy Building Blocks Editor (7 Cols) -->
+      <div class="lg:col-span-7 flex flex-col gap-4">
+        
+        <!-- Header Bar for Anatomy Cards -->
+        <div class="flex items-center justify-between bg-slate-900 border border-slate-800 p-3.5 rounded-xl">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-green-500 inline-block animate-pulse"></span>
+            <h3 class="font-bold text-sm text-white">Struktur Anatomi Prompt</h3>
+            <span class="text-xs text-slate-400 hidden sm:inline">(Dapat diedit langsung atau disempurnakan)</span>
+          </div>
+
+          <button id="btn-refine-all" class="text-xs text-brand-400 hover:text-brand-300 font-medium flex items-center gap-1 px-2.5 py-1 bg-brand-500/10 hover:bg-brand-500/20 rounded-lg transition border border-brand-500/20">
+            <i class="fa-solid fa-arrows-rotate text-xs"></i> Regenerasi Semua
+          </button>
+        </div>
+
+        <!-- Anatomy Component 1: ROLE -->
+        <div class="anatomy-card bg-slate-900 border-l-4 border-role border-y border-r border-slate-800 rounded-xl p-4 relative group">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-role"></span>
+              <span class="font-bold text-xs uppercase tracking-wider text-role">1. Role (Peran & Expertise)</span>
+            </div>
+            <button data-section="role" class="btn-refine-single text-xs text-slate-400 hover:text-role transition flex items-center gap-1 opacity-80 hover:opacity-100">
+              <i class="fa-solid fa-wand-sparkles"></i> Polishing
+            </button>
+          </div>
+          <p class="text-xs text-slate-400 mb-2">Tentukan siapa AI ini, kepakarannya, dan mindset prioritasnya.</p>
+          <textarea id="block-role" rows="3" class="w-full bg-slate-950 text-slate-200 text-xs sm:text-sm p-3 rounded-lg border border-slate-800 focus:border-role outline-none leading-relaxed resize-y font-mono" placeholder="Act as a senior go-to-market strategist..."></textarea>
+        </div>
+
+        <!-- Anatomy Component 2: TASK -->
+        <div class="anatomy-card bg-slate-900 border-l-4 border-task border-y border-r border-slate-800 rounded-xl p-4 relative group">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-task"></span>
+              <span class="font-bold text-xs uppercase tracking-wider text-task">2. Task (Tugas Utama)</span>
+            </div>
+            <button data-section="task" class="btn-refine-single text-xs text-slate-400 hover:text-task transition flex items-center gap-1 opacity-80 hover:opacity-100">
+              <i class="fa-solid fa-wand-sparkles"></i> Polishing
+            </button>
+          </div>
+          <p class="text-xs text-slate-400 mb-2">Tindakan atau gol utama yang harus dikerjakan AI secara lugas.</p>
+          <textarea id="block-task" rows="3" class="w-full bg-slate-950 text-slate-200 text-xs sm:text-sm p-3 rounded-lg border border-slate-800 focus:border-task outline-none leading-relaxed resize-y font-mono" placeholder="Build a 90-day launch plan for a new AI tool..."></textarea>
+        </div>
+
+        <!-- Anatomy Component 3: CONTEXT -->
+        <div class="anatomy-card bg-slate-900 border-l-4 border-context border-y border-r border-slate-800 rounded-xl p-4 relative group">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-context"></span>
+              <span class="font-bold text-xs uppercase tracking-wider text-context">3. Context (Konteks & Batasan)</span>
+            </div>
+            <button data-section="context" class="btn-refine-single text-xs text-slate-400 hover:text-context transition flex items-center gap-1 opacity-80 hover:opacity-100">
+              <i class="fa-solid fa-wand-sparkles"></i> Polishing
+            </button>
+          </div>
+          <p class="text-xs text-slate-400 mb-2">Latar belakang, informasi produk, anggota tim, risiko, dan kendala yang diketahui.</p>
+          <textarea id="block-context" rows="4" class="w-full bg-slate-950 text-slate-200 text-xs sm:text-sm p-3 rounded-lg border border-slate-800 focus:border-context outline-none leading-relaxed resize-y font-mono" placeholder="Here's what I know:&#10;-Product: AI task manager...&#10;-Team: 2-person..."></textarea>
+        </div>
+
+        <!-- Anatomy Component 4: REASONING -->
+        <div class="anatomy-card bg-slate-900 border-l-4 border-reasoning border-y border-r border-slate-800 rounded-xl p-4 relative group">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-reasoning"></span>
+              <span class="font-bold text-xs uppercase tracking-wider text-reasoning">4. Reasoning (Alasan & Metodologi)</span>
+            </div>
+            <button data-section="reasoning" class="btn-refine-single text-xs text-slate-400 hover:text-reasoning transition flex items-center gap-1 opacity-80 hover:opacity-100">
+              <i class="fa-solid fa-wand-sparkles"></i> Polishing
+            </button>
+          </div>
+          <p class="text-xs text-slate-400 mb-2">Ekspektasi kualitas, argumentasi mengapa metode ini diambil, dan standar pengerjaan.</p>
+          <textarea id="block-reasoning" rows="3" class="w-full bg-slate-950 text-slate-200 text-xs sm:text-sm p-3 rounded-lg border border-slate-800 focus:border-reasoning outline-none leading-relaxed resize-y font-mono" placeholder="The goal is a crisp, launch-ready strategy. By locking in ICP clarity upfront..."></textarea>
+        </div>
+
+        <!-- Anatomy Component 5: STOP CONDITIONS -->
+        <div class="anatomy-card bg-slate-900 border-l-4 border-stop border-y border-r border-slate-800 rounded-xl p-4 relative group">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-stop"></span>
+              <span class="font-bold text-xs uppercase tracking-wider text-stop">5. Stop Conditions (Syarat Selesai)</span>
+            </div>
+            <button data-section="stop_conditions" class="btn-refine-single text-xs text-slate-400 hover:text-stop transition flex items-center gap-1 opacity-80 hover:opacity-100">
+              <i class="fa-solid fa-wand-sparkles"></i> Polishing
+            </button>
+          </div>
+          <p class="text-xs text-slate-400 mb-2">Syarat eksplisit kapan respon dianggap tuntas (mencegah jawaban mengambang/setengah).</p>
+          <textarea id="block-stop" rows="3" class="w-full bg-slate-950 text-slate-200 text-xs sm:text-sm p-3 rounded-lg border border-slate-800 focus:border-stop outline-none leading-relaxed resize-y font-mono" placeholder="Only stop when:&#10;-A 12-week roadmap with 3-4 actions/week is provided..."></textarea>
+        </div>
+
+        <!-- Anatomy Component 6: OUTPUT -->
+        <div class="anatomy-card bg-slate-900 border-l-4 border-output border-y border-r border-slate-800 rounded-xl p-4 relative group">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-output"></span>
+              <span class="font-bold text-xs uppercase tracking-wider text-output">6. Output Format (Format Jawaban)</span>
+            </div>
+            <button data-section="output" class="btn-refine-single text-xs text-slate-400 hover:text-output transition flex items-center gap-1 opacity-80 hover:opacity-100">
+              <i class="fa-solid fa-wand-sparkles"></i> Polishing
+            </button>
+          </div>
+          <p class="text-xs text-slate-400 mb-2">Struktur visual jawaban (Tabel, Sprint mingguan, Bullet checklist, Pemilik tugas, Rationale).</p>
+          <textarea id="block-output" rows="3" class="w-full bg-slate-950 text-slate-200 text-xs sm:text-sm p-3 rounded-lg border border-slate-800 focus:border-output outline-none leading-relaxed resize-y font-mono" placeholder="Present as a weekly sprint plan. For each action:&#10;-Action: ...&#10;-Owner: ..."></textarea>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Final Output Master Prompt, Style Options & Live Simulator (5 Cols) -->
+      <div class="lg:col-span-5 flex flex-col gap-6 sticky top-20">
+
+        <!-- Master Output Card -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col gap-4">
+          
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+              <h3 class="font-extrabold text-base text-white flex items-center gap-2">
+                <i class="fa-solid fa-code text-indigo-400"></i>
+                Master Prompt Final
+              </h3>
+              <p class="text-xs text-slate-400">Siap digunakan di Claude, Gemini, ChatGPT dll.</p>
+            </div>
+
+            <!-- Format Switcher Buttons -->
+            <div class="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800">
+              <button id="fmt-xml" class="fmt-btn active text-xs font-semibold px-2.5 py-1 rounded bg-slate-800 text-brand-300 transition">
+                XML Tags
+              </button>
+              <button id="fmt-markdown" class="fmt-btn text-xs font-semibold px-2.5 py-1 rounded text-slate-400 hover:text-white transition">
+                Markdown
+              </button>
+              <button id="fmt-plain" class="fmt-btn text-xs font-semibold px-2.5 py-1 rounded text-slate-400 hover:text-white transition">
+                Plain
+              </button>
+            </div>
+          </div>
+
+          <!-- Master Text Display Area -->
+          <div class="relative">
+            <pre id="master-prompt-display" class="bg-slate-950 text-slate-200 text-xs p-4 rounded-xl border border-slate-800 font-mono whitespace-pre-wrap break-words max-h-[420px] overflow-y-auto leading-relaxed selection:bg-brand-500 selection:text-white">Isi prompt singkat Anda di atas dan klik "Analisis & Buat Master Prompt" untuk melihat hasilnya di sini...</pre>
+          </div>
+
+          <!-- Quality Score Indicator -->
+          <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div id="score-badge" class="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-sm flex items-center justify-center">
+                98%
+              </div>
+              <div>
+                <span class="text-xs font-semibold text-slate-200 block">Skor Kelengkapan Prompt</span>
+                <span id="score-text" class="text-[11px] text-slate-400 block">Mengikuti struktur presisi 6 anatomi.</span>
+              </div>
+            </div>
+
+            <button id="btn-suggest-modal" class="text-xs text-brand-400 hover:underline">
+              Saran AI <i class="fa-solid fa-chevron-right text-[10px]"></i>
+            </button>
+          </div>
+
+          <!-- Actions Bar -->
+          <div class="grid grid-cols-2 gap-2">
+            <button id="btn-copy-master" class="bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-md shadow-brand-600/20 active:scale-[0.98]">
+              <i class="fa-regular fa-copy"></i>
+              <span>Salin Master Prompt</span>
+            </button>
+
+            <button id="btn-save-library" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs py-2.5 px-4 rounded-xl border border-slate-700 transition flex items-center justify-center gap-2 active:scale-[0.98]">
+              <i class="fa-regular fa-bookmark"></i>
+              <span>Simpan Ke Klip</span>
+            </button>
+          </div>
+
+          <!-- Test / Simulation Toggle Button -->
+          <button id="btn-run-simulation" class="w-full bg-slate-800/80 hover:bg-indigo-900/40 text-indigo-300 hover:text-indigo-200 border border-indigo-500/30 font-medium text-xs py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-play text-indigo-400"></i>
+            <span>Simulasikan Eksekusi Prompt Ini via AI</span>
+          </button>
+
+        </div>
+
+        <!-- AI Simulation Output Modal/Box -->
+        <div id="simulation-box" class="bg-slate-900 border border-indigo-500/30 rounded-2xl p-4 shadow-xl hidden flex-col gap-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+              <h4 class="font-bold text-xs text-indigo-300">Hasil Simulasi AI Live</h4>
+            </div>
+            <button id="btn-close-sim" class="text-xs text-slate-400 hover:text-white">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div id="sim-content" class="text-xs text-slate-300 font-sans whitespace-pre-wrap max-h-60 overflow-y-auto leading-relaxed bg-slate-950 p-3 rounded-lg border border-slate-800">
+            Klik tombol simulasikan untuk menguji performa Master Prompt ini secara langsung...
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- API Key Settings Modal -->
+  <div id="modal-settings" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button id="btn-close-settings" class="absolute top-4 right-4 text-slate-400 hover:text-white w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+          <i class="fa-solid fa-key text-lg"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-white">Pengaturan Gemini API Key</h3>
+          <p class="text-xs text-slate-400">Tersimpan aman di LocalStorage browser Anda</p>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-2">
+          <p class="flex items-center gap-1.5 text-emerald-400 font-semibold">
+            <i class="fa-solid fa-shield-halved"></i> 100% Aman & Privasi Terjaga
+          </p>
+          <p class="text-slate-400 leading-relaxed">
+            API Key Anda tidak disimpan di server GitHub. Kunci hanya tersimpan di browser Anda untuk memanggil langsung API Google Gemini.
+          </p>
+        </div>
+
+        <div>
+          <label for="input-api-key" class="block text-xs font-medium text-slate-300 mb-1.5">Google Gemini API Key:</label>
+          <div class="relative">
+            <input type="password" id="input-api-key" class="w-full bg-slate-950 text-slate-100 placeholder-slate-600 px-3.5 py-2.5 rounded-xl border border-slate-700 focus:border-brand-500 outline-none text-xs font-mono" placeholder="AIzaSy..." />
+            <button id="btn-toggle-key-visibility" class="absolute right-3 top-2.5 text-slate-500 hover:text-slate-300 text-xs">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-1">Belum punya API key? Dapatkan secara gratis di <a href="https://aistudio.google.com/" target="_blank" class="text-brand-400 underline">Google AI Studio</a>.</p>
+        </div>
+
+        <div class="flex gap-2 justify-end pt-2">
+          <button id="btn-clear-key" class="text-xs px-3 py-2 text-rose-400 hover:bg-rose-500/10 rounded-lg transition">Hapus Key</button>
+          <button id="btn-save-key" class="text-xs px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg shadow-md transition">Simpan API Key</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Anatomy Reference / Guide Modal -->
+  <div id="modal-guide" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <button id="btn-close-guide" class="absolute top-4 right-4 text-slate-400 hover:text-white w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-pink-500 flex items-center justify-center">
+          <i class="fa-solid fa-sitemap text-white"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-white">Anatomi Master Prompt Claude</h3>
+          <p class="text-xs text-slate-400">Kerangka kerja prompt profesional berakurasi tinggi</p>
+        </div>
+      </div>
+
+      <div class="space-y-3 text-xs sm:text-sm">
+        <div class="p-3 rounded-lg bg-slate-950 border-l-4 border-role">
+          <span class="font-bold text-role block mb-0.5">1. Role (Peran)</span>
+          <p class="text-slate-300">Mendefinisikan identitas, pengalaman, spesialisasi, dan mindset AI saat menjawab.</p>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-950 border-l-4 border-task">
+          <span class="font-bold text-task block mb-0.5">2. Task (Tugas)</span>
+          <p class="text-slate-300">Menentukan goal langsung dan tindakan spesifik yang harus diselesaikan.</p>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-950 border-l-4 border-context">
+          <span class="font-bold text-context block mb-0.5">3. Context (Konteks)</span>
+          <p class="text-slate-300">Menyediakan fakta penting, data produk, kondisi tim, sumber daya, dan batasan utama.</p>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-950 border-l-4 border-reasoning">
+          <span class="font-bold text-reasoning block mb-0.5">4. Reasoning (Alasan & Metodologi)</span>
+          <p class="text-slate-300">Penjelasan mengapa pendekatan tersebut dipilih dan ekspektasi standar kualitas hasil akhir.</p>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-950 border-l-4 border-stop">
+          <span class="font-bold text-stop block mb-0.5">5. Stop Conditions (Syarat Berhenti)</span>
+          <p class="text-slate-300">Kriteria tegas kapan tugas dianggap selesai sepenuhnya agar respon terstruktur hingga akhir.</p>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-950 border-l-4 border-output">
+          <span class="font-bold text-output block mb-0.5">6. Output Format (Format Jawaban)</span>
+          <p class="text-slate-300">Bentuk fisik output (misal: Sprint mingguan, daftar dengan kolom Action, Owner, Risk, Rationale).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Library Modal -->
+  <div id="modal-library" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-6 shadow-2xl relative max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-bookmark text-amber-400 text-lg"></i>
+          <h3 class="text-lg font-bold text-white">Perpustakaan Master Prompt</h3>
+        </div>
+        <button id="btn-close-library" class="text-slate-400 hover:text-white w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Saved List -->
+      <div id="saved-prompts-list" class="flex-1 overflow-y-auto space-y-3 pr-2">
+        <!-- Rendered items go here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Suggestions Modal -->
+  <div id="modal-suggestions" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-lightbulb text-amber-400"></i>
+          Saran Penyempurnaan AI
+        </h3>
+        <button id="btn-close-suggestions" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <ul id="suggestions-list" class="space-y-2 text-xs sm:text-sm text-slate-300 list-disc list-inside">
+        <!-- Dynamic list -->
+      </ul>
+    </div>
+  </div>
+
+  <!-- Main JavaScript Logic -->
+  <script>
+    // State Management
+    const state = {
+      role: '',
+      task: '',
+      context: '',
+      reasoning: '',
+      stop_conditions: '',
+      output: '',
+      title: 'Master Prompt',
+      score: 95,
+      suggestions: [],
+      format: 'xml', // 'xml' | 'markdown' | 'plain'
+      apiKey: localStorage.getItem('gemini_user_api_key') || '',
+      savedPrompts: JSON.parse(localStorage.getItem('anatomy_prompts_library') || '[]')
+    };
+
+    // Preset Data Examples
+    const presets = {
+      'saas-launch': "Buatkan strategi peluncuran 90 hari untuk aplikasi manajemen tugas AI khusus founder startup tahap awal dengan tim kecil 2 orang dan anggaran terbatas.",
+      'python-mentor': "Rancang rencana belajar Python interaktif selama 30 hari untuk pemula tanpa latar belakang koding, fokus pada otomatisasi tugas sehari-hari.",
+      'copywriting': "Tuliskan landing page copywriting conversion-focused untuk produk kacamata anti-radiasi komputer dengan garansi 100% uang kembali.",
+      'data-analyst': "Lakukan analisis retensi pengguna untuk aplikasi e-commerce yang mengalami kenaikan churn rate 15% pada bulan lalu."
+    };
+
+    // DOM Elements
+    const elements = {
+      userInput: document.getElementById('user-input-prompt'),
+      selectLanguage: document.getElementById('select-language'),
+      selectTone: document.getElementById('select-tone'),
+      btnGenerateMaster: document.getElementById('btn-generate-master'),
+      
+      blockRole: document.getElementById('block-role'),
+      blockTask: document.getElementById('block-task'),
+      blockContext: document.getElementById('block-context'),
+      blockReasoning: document.getElementById('block-reasoning'),
+      blockStop: document.getElementById('block-stop'),
+      blockOutput: document.getElementById('block-output'),
+
+      masterDisplay: document.getElementById('master-prompt-display'),
+      btnCopyMaster: document.getElementById('btn-copy-master'),
+      btnSaveLibrary: document.getElementById('btn-save-library'),
+      btnRefineAll: document.getElementById('btn-refine-all'),
+      btnRunSim: document.getElementById('btn-run-simulation'),
+      
+      scoreBadge: document.getElementById('score-badge'),
+      scoreText: document.getElementById('score-text'),
+      
+      simBox: document.getElementById('simulation-box'),
+      simContent: document.getElementById('sim-content'),
+      btnCloseSim: document.getElementById('btn-close-sim'),
+
+      // Settings Modal & API Key
+      modalSettings: document.getElementById('modal-settings'),
+      btnShowSettings: document.getElementById('btn-show-settings'),
+      btnCloseSettings: document.getElementById('btn-close-settings'),
+      inputApiKey: document.getElementById('input-api-key'),
+      btnSaveKey: document.getElementById('btn-save-key'),
+      btnClearKey: document.getElementById('btn-clear-key'),
+      apiKeyIndicator: document.getElementById('api-key-indicator'),
+      btnToggleKeyVisibility: document.getElementById('btn-toggle-key-visibility'),
+
+      modalGuide: document.getElementById('modal-guide'),
+      btnShowGuide: document.getElementById('btn-show-guide'),
+      btnCloseGuide: document.getElementById('btn-close-guide'),
+
+      modalLibrary: document.getElementById('modal-library'),
+      btnShowLibrary: document.getElementById('btn-show-library'),
+      btnCloseLibrary: document.getElementById('btn-close-library'),
+      savedCountBadge: document.getElementById('saved-count-badge'),
+      savedPromptsList: document.getElementById('saved-prompts-list'),
+
+      modalSuggestions: document.getElementById('modal-suggestions'),
+      btnSuggestModal: document.getElementById('btn-suggest-modal'),
+      btnCloseSuggestions: document.getElementById('btn-close-suggestions'),
+      suggestionsList: document.getElementById('suggestions-list'),
+
+      fmtXml: document.getElementById('fmt-xml'),
+      fmtMarkdown: document.getElementById('fmt-markdown'),
+      fmtPlain: document.getElementById('fmt-plain')
+    };
+
+    // Initialize Application
+    window.addEventListener('DOMContentLoaded', () => {
+      updateSavedBadge();
+      updateApiKeyUIStatus();
+      attachEventListeners();
+      
+      if (!elements.userInput.value.trim()) {
+        elements.userInput.value = presets['saas-launch'];
+      }
+      
+      generateDefaultMasterPrompt();
+    });
+
+    // Event Listeners setup
+    function attachEventListeners() {
+      // Presets
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const key = e.currentTarget.getAttribute('data-preset');
+          if (presets[key]) {
+            elements.userInput.value = presets[key];
+            showToast('Preset dimuat! Klik Analisis untuk membuat prompt.', 'info');
+          }
+        });
+      });
+
+      // API Key Settings Modal
+      elements.btnShowSettings.addEventListener('click', () => {
+        elements.inputApiKey.value = state.apiKey;
+        elements.modalSettings.classList.remove('hidden');
+      });
+
+      elements.btnCloseSettings.addEventListener('click', () => {
+        elements.modalSettings.classList.add('hidden');
+      });
+
+      elements.btnSaveKey.addEventListener('click', () => {
+        const val = elements.inputApiKey.value.trim();
+        state.apiKey = val;
+        localStorage.setItem('gemini_user_api_key', val);
+        updateApiKeyUIStatus();
+        elements.modalSettings.classList.add('hidden');
+        showToast('API Key berhasil disimpan di browser Anda!', 'success');
+      });
+
+      elements.btnClearKey.addEventListener('click', () => {
+        state.apiKey = '';
+        localStorage.removeItem('gemini_user_api_key');
+        elements.inputApiKey.value = '';
+        updateApiKeyUIStatus();
+        showToast('API Key telah dihapus.', 'info');
+      });
+
+      elements.btnToggleKeyVisibility.addEventListener('click', () => {
+        const input = elements.inputApiKey;
+        const icon = elements.btnToggleKeyVisibility.querySelector('i');
+        if (input.type === 'password') {
+          input.type = 'text';
+          icon.className = 'fa-regular fa-eye-slash';
+        } else {
+          input.type = 'password';
+          icon.className = 'fa-regular fa-eye';
+        }
+      });
+
+      // Main Trigger Button
+      elements.btnGenerateMaster.addEventListener('click', () => {
+        handleGenerateMasterPrompt();
+      });
+
+      // Direct Input Text Sync
+      elements.blockRole.addEventListener('input', (e) => { state.role = e.target.value; updateMasterDisplay(); });
+      elements.blockTask.addEventListener('input', (e) => { state.task = e.target.value; updateMasterDisplay(); });
+      elements.blockContext.addEventListener('input', (e) => { state.context = e.target.value; updateMasterDisplay(); });
+      elements.blockReasoning.addEventListener('input', (e) => { state.reasoning = e.target.value; updateMasterDisplay(); });
+      elements.blockStop.addEventListener('input', (e) => { state.stop_conditions = e.target.value; updateMasterDisplay(); });
+      elements.blockOutput.addEventListener('input', (e) => { state.output = e.target.value; updateMasterDisplay(); });
+
+      // Format Switcher
+      elements.fmtXml.addEventListener('click', () => setFormat('xml'));
+      elements.fmtMarkdown.addEventListener('click', () => setFormat('markdown'));
+      elements.fmtPlain.addEventListener('click', () => setFormat('plain'));
+
+      // Action Handlers
+      elements.btnCopyMaster.addEventListener('click', copyMasterToClipboard);
+      elements.btnSaveLibrary.addEventListener('click', savePromptToLibrary);
+
+      // Single Refine AI
+      document.querySelectorAll('.btn-refine-single').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const sectionKey = e.currentTarget.getAttribute('data-section');
+          refineSingleSection(sectionKey);
+        });
+      });
+
+      elements.btnRefineAll.addEventListener('click', () => handleGenerateMasterPrompt());
+      elements.btnRunSim.addEventListener('click', runPromptSimulation);
+      elements.btnCloseSim.addEventListener('click', () => elements.simBox.classList.add('hidden'));
+
+      // Modals
+      elements.btnShowGuide.addEventListener('click', () => elements.modalGuide.classList.remove('hidden'));
+      elements.btnCloseGuide.addEventListener('click', () => elements.modalGuide.classList.add('hidden'));
+
+      elements.btnShowLibrary.addEventListener('click', openLibraryModal);
+      elements.btnCloseLibrary.addEventListener('click', () => elements.modalLibrary.classList.add('hidden'));
+
+      elements.btnSuggestModal.addEventListener('click', () => elements.modalSuggestions.classList.remove('hidden'));
+      elements.btnCloseSuggestions.addEventListener('click', () => elements.modalSuggestions.classList.add('hidden'));
+    }
+
+    function updateApiKeyUIStatus() {
+      if (state.apiKey) {
+        elements.apiKeyIndicator.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+      } else {
+        elements.apiKeyIndicator.className = 'w-2 h-2 rounded-full bg-rose-500';
+      }
+    }
+
+    function checkApiKeyAvailable() {
+      if (!state.apiKey) {
+        elements.modalSettings.classList.remove('hidden');
+        showToast('Silakan masukkan Gemini API Key Anda terlebih dahulu.', 'warning');
+        return false;
+      }
+      return true;
+    }
+
+    // Default Initialization Data
+    function generateDefaultMasterPrompt() {
+      state.role = "Act as a senior go-to-market strategist with deep expertise launching early-stage SaaS tools. Prioritize traction speed over brand perfection.";
+      state.task = "Build a 90-day launch plan for a new AI productivity tool for founders. Validate the core messaging, end with a launch-ready brief.";
+      state.context = "Here's what I know:\n-Product: AI task manager for founders (25-40).\n-Team: 2-person (Founder + Growth marketer).\n-Resources: Lean budget, 15-20 beta users.\n-Key Risks: Adoption, Retention, Positioning.";
+      state.reasoning = "The goal is a crisp, launch-ready strategy. By locking in ICP clarity upfront and asking you to defend each step, the output will be truly actionable and founder-grade.";
+      state.stop_conditions = "Only stop when:\n-A 12-week roadmap with 3-4 actions/week is completed.\n-Every action links to the risk it addresses.\n-Plan ends with a final Launch Decision Gate.";
+      state.output = "Present as a weekly sprint plan. For each action:\n-Action: The specific task to complete.\n-Owner: Founder, Growth lead, or Designer.\n-Risk: Adoption, Retention, or Positioning.\n-Rationale + Output: reasoning, deliverable.";
+      state.title = "SaaS Launch Master Strategy Prompt";
+      state.score = 98;
+      state.suggestions = [
+        "Tambahkan detail mengenai KPI target spesifik (seperti jumlah MRR atau sign-up).",
+        "Tentukan saluran distribusi utama jika sudah ada (misal: ProductHunt, Twitter/X)."
+      ];
+
+      syncStateToUI();
+    }
+
+    function syncStateToUI() {
+      elements.blockRole.value = state.role;
+      elements.blockTask.value = state.task;
+      elements.blockContext.value = state.context;
+      elements.blockReasoning.value = state.reasoning;
+      elements.blockStop.value = state.stop_conditions;
+      elements.blockOutput.value = state.output;
+
+      elements.scoreBadge.textContent = `${state.score}%`;
+      updateMasterDisplay();
+      updateSuggestionsUI();
+    }
+
+    function setFormat(fmt) {
+      state.format = fmt;
+      [elements.fmtXml, elements.fmtMarkdown, elements.fmtPlain].forEach(btn => {
+        btn.classList.remove('bg-slate-800', 'text-brand-300');
+        btn.classList.add('text-slate-400');
+      });
+
+      if (fmt === 'xml') elements.fmtXml.classList.add('bg-slate-800', 'text-brand-300');
+      if (fmt === 'markdown') elements.fmtMarkdown.classList.add('bg-slate-800', 'text-brand-300');
+      if (fmt === 'plain') elements.fmtPlain.classList.add('bg-slate-800', 'text-brand-300');
+
+      updateMasterDisplay();
+    }
+
+    function buildFormattedMasterPrompt() {
+      const { role, task, context, reasoning, stop_conditions, output, format } = state;
+
+      if (format === 'xml') {
+        return `<role>\n${role}\n</role>\n\n<task>\n${task}\n</task>\n\n<context>\n${context}\n</context>\n\n<reasoning>\n${reasoning}\n</reasoning>\n\n<stop_conditions>\n${stop_conditions}\n</stop_conditions>\n\n<output_format>\n${output}\n</output_format>`;
+      } else if (format === 'markdown') {
+        return `## ROLE\n${role}\n\n## TASK\n${task}\n\n## CONTEXT\n${context}\n\n## REASONING\n${reasoning}\n\n## STOP CONDITIONS\n${stop_conditions}\n\n## OUTPUT FORMAT\n${output}`;
+      } else {
+        return `[ROLE]\n${role}\n\n[TASK]\n${task}\n\n[CONTEXT]\n${context}\n\n[REASONING]\n${reasoning}\n\n[STOP CONDITIONS]\n${stop_conditions}\n\n[OUTPUT FORMAT]\n${output}`;
+      }
+    }
+
+    function updateMasterDisplay() {
+      elements.masterDisplay.textContent = buildFormattedMasterPrompt();
+    }
+
+    function updateSuggestionsUI() {
+      elements.suggestionsList.innerHTML = state.suggestions.map(s => `<li>${escapeHtml(s)}</li>`).join('');
+    }
+
+    // Fetch Gemini API using stored key
+    async function fetchGeminiWithBackoff(payload, retries = 3, delay = 1000) {
+      const activeKey = state.apiKey;
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${activeKey}`;
+
+      for (let attempt = 0; attempt < retries; attempt++) {
+        try {
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            const errBody = await response.json().catch(() => ({}));
+            throw new Error(errBody?.error?.message || `HTTP error ${response.status}`);
+          }
+
+          const result = await response.json();
+          return result;
+        } catch (error) {
+          if (attempt === retries - 1) throw error;
+          await new Promise(res => setTimeout(res, delay * Math.pow(2, attempt)));
+        }
+      }
+    }
+
+    // Generate Master Prompt Action
+    async function handleGenerateMasterPrompt() {
+      if (!checkApiKeyAvailable()) return;
+
+      const userPrompt = elements.userInput.value.trim();
+      if (!userPrompt) {
+        showToast('Mohon masukkan prompt singkat terlebih dahulu!', 'warning');
+        return;
+      }
+
+      setLoading(true, 'Menganalisis & menyusun 6 anatomi prompt...');
+
+      const lang = elements.selectLanguage.value;
+      const tone = elements.selectTone.value;
+
+      const systemPrompt = `You are a world-class Prompt Engineer specializing in the "Anatomy of a Claude Prompt" framework.
+Analyze the user's short prompt and expand it into a fully structured, highly effective Master Prompt following these exact 6 anatomical sections:
+
+1. ROLE: Persona, expertise level, mindset, and priority guidelines.
+2. TASK: The primary directive, concrete objective, and key deliverable.
+3. CONTEXT: Necessary background data, product info, constraints, audience, risks, resources.
+4. REASONING: Why this strategy is selected, methodology, and quality threshold expected.
+5. STOP_CONDITIONS: Explicit completion rules (e.g., "Only stop when: ...") to ensure complete non-halting output.
+6. OUTPUT: Exact structure, table layout, headings, or checklist for the response.
+
+Tone/Style: ${tone}
+Language: ${lang === 'id' ? 'Bahasa Indonesia' : 'English'}
+
+Return strictly a valid JSON object matching this schema:
+{
+  "title": "Short descriptive title for this prompt",
+  "role": "...",
+  "task": "...",
+  "context": "...",
+  "reasoning": "...",
+  "stop_conditions": "...",
+  "output": "...",
+  "score": 95,
+  "suggestions": ["suggestion 1", "suggestion 2"]
+}`;
+
+      const payload = {
+        contents: [{ parts: [{ text: `Original prompt: "${userPrompt}"` }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              title: { type: "STRING" },
+              role: { type: "STRING" },
+              task: { type: "STRING" },
+              context: { type: "STRING" },
+              reasoning: { type: "STRING" },
+              stop_conditions: { type: "STRING" },
+              output: { type: "STRING" },
+              score: { type: "NUMBER" },
+              suggestions: {
+                type: "ARRAY",
+                items: { type: "STRING" }
+              }
+            },
+            required: ["title", "role", "task", "context", "reasoning", "stop_conditions", "output", "score", "suggestions"]
+          }
+        }
+      };
+
+      try {
+        const result = await fetchGeminiWithBackoff(payload);
+        const textContent = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (textContent) {
+          const parsed = JSON.parse(textContent);
+          state.role = parsed.role || '';
+          state.task = parsed.task || '';
+          state.context = parsed.context || '';
+          state.reasoning = parsed.reasoning || '';
+          state.stop_conditions = parsed.stop_conditions || '';
+          state.output = parsed.output || '';
+          state.title = parsed.title || 'Master Prompt';
+          state.score = parsed.score || 90;
+          state.suggestions = parsed.suggestions || [];
+
+          syncStateToUI();
+          showToast('Master Prompt berhasil dibentuk!', 'success');
+        } else {
+          throw new Error('Respon tidak valid dari AI.');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast(`Gagal: ${err.message || 'Periksa API Key Anda'}`, 'error');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // Refine Single Section
+    async function refineSingleSection(sectionKey) {
+      if (!checkApiKeyAvailable()) return;
+
+      const currentValue = state[sectionKey];
+      const lang = elements.selectLanguage.value;
+
+      setLoading(true, `Menyempurnakan bagian ${sectionKey.toUpperCase()}...`);
+
+      const systemInstruction = `You are a Prompt Refinement Specialist. Improve and polish the following prompt section ("${sectionKey}") to make it exceptionally clear, structured, and effective.
+Language: ${lang === 'id' ? 'Bahasa Indonesia' : 'English'}.
+Return ONLY a raw string of the polished section without Markdown code fences or additional fluff.`;
+
+      const payload = {
+        contents: [{ parts: [{ text: `Section: ${sectionKey}\nCurrent Content:\n${currentValue}` }] }],
+        systemInstruction: { parts: [{ text: systemInstruction }] }
+      };
+
+      try {
+        const result = await fetchGeminiWithBackoff(payload);
+        const polishedText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (polishedText) {
+          state[sectionKey] = polishedText.trim();
+          syncStateToUI();
+          showToast(`Bagian ${sectionKey.toUpperCase()} berhasil disempurnakan!`, 'success');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Gagal menyempurnakan bagian ini.', 'error');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // Run Prompt Simulation Live
+    async function runPromptSimulation() {
+      if (!checkApiKeyAvailable()) return;
+
+      const fullPrompt = buildFormattedMasterPrompt();
+      if (!fullPrompt.trim()) return;
+
+      elements.simBox.classList.remove('hidden');
+      elements.simBox.classList.add('flex');
+      elements.simContent.innerHTML = `<span class="flex items-center gap-2 text-indigo-400"><i class="fa-solid fa-circle-notch animate-spin"></i> Menjalankan Master Prompt melalui AI untuk simulasi hasil...</span>`;
+
+      const payload = {
+        contents: [{ parts: [{ text: fullPrompt }] }]
+      };
+
+      try {
+        const result = await fetchGeminiWithBackoff(payload);
+        const simResponse = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (simResponse) {
+          elements.simContent.textContent = simResponse;
+          showToast('Simulasi selesai dikerjakan!', 'success');
+        } else {
+          elements.simContent.textContent = 'Gagal menerima respon simulasi.';
+        }
+      } catch (err) {
+        console.error(err);
+        elements.simContent.textContent = `Terjadi kesalahan saat simulasi: ${err.message}`;
+      }
+    }
+
+    // Copy to Clipboard
+    function copyMasterToClipboard() {
+      const textToCopy = buildFormattedMasterPrompt();
+      const textarea = document.createElement('textarea');
+      textarea.value = textToCopy;
+      document.body.appendChild(textarea);
+      textarea.select();
+      
+      try {
+        document.execCommand('copy');
+        showToast('Master Prompt berhasil disalin ke clipboard!', 'success');
+      } catch (err) {
+        showToast('Gagal menyalin text.', 'error');
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
+
+    // Save to Local Library
+    function savePromptToLibrary() {
+      const newItem = {
+        id: Date.now(),
+        title: state.title || 'Untitled Master Prompt',
+        date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+        role: state.role,
+        task: state.task,
+        context: state.context,
+        reasoning: state.reasoning,
+        stop_conditions: state.stop_conditions,
+        output: state.output
+      };
+
+      state.savedPrompts.unshift(newItem);
+      localStorage.setItem('anatomy_prompts_library', JSON.stringify(state.savedPrompts));
+      updateSavedBadge();
+      showToast('Master Prompt berhasil disimpan ke perpustakaan!', 'success');
+    }
+
+    function updateSavedBadge() {
+      elements.savedCountBadge.textContent = state.savedPrompts.length;
+    }
+
+    function openLibraryModal() {
+      elements.modalLibrary.classList.remove('hidden');
+      renderSavedList();
+    }
+
+    function renderSavedList() {
+      if (state.savedPrompts.length === 0) {
+        elements.savedPromptsList.innerHTML = `<div class="text-center py-8 text-slate-500 text-sm">Belum ada Master Prompt tersimpan. Simpan prompt hasil analisis Anda di sini!</div>`;
+        return;
+      }
+
+      elements.savedPromptsList.innerHTML = state.savedPrompts.map(item => `
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 hover:border-slate-700 transition flex items-start justify-between gap-4">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <h4 class="font-bold text-sm text-slate-200">${escapeHtml(item.title)}</h4>
+              <span class="text-[10px] text-slate-500">${item.date}</span>
+            </div>
+            <p class="text-xs text-slate-400 line-clamp-2 mb-2">${escapeHtml(item.task)}</p>
+            <div class="flex items-center gap-2">
+              <button onclick="loadSavedPrompt(${item.id})" class="text-xs text-brand-400 hover:underline flex items-center gap-1">
+                <i class="fa-solid fa-folder-open"></i> Muat Prompt
+              </button>
+            </div>
+          </div>
+          <button onclick="deleteSavedPrompt(${item.id})" class="text-xs text-rose-400 hover:text-rose-300 p-1">
+            <i class="fa-regular fa-trash-can"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    window.loadSavedPrompt = function(id) {
+      const found = state.savedPrompts.find(p => p.id === id);
+      if (found) {
+        state.role = found.role || '';
+        state.task = found.task || '';
+        state.context = found.context || '';
+        state.reasoning = found.reasoning || '';
+        state.stop_conditions = found.stop_conditions || '';
+        state.output = found.output || '';
+        state.title = found.title || 'Loaded Prompt';
+
+        syncStateToUI();
+        elements.modalLibrary.classList.add('hidden');
+        showToast('Prompt berhasil dimuat dari perpustakaan!', 'info');
+      }
+    };
+
+    window.deleteSavedPrompt = function(id) {
+      state.savedPrompts = state.savedPrompts.filter(p => p.id !== id);
+      localStorage.setItem('anatomy_prompts_library', JSON.stringify(state.savedPrompts));
+      updateSavedBadge();
+      renderSavedList();
+      showToast('Prompt dihapus dari perpustakaan.', 'info');
+    };
+
+    function setLoading(isLoading, text = 'Loading...') {
+      if (isLoading) {
+        elements.btnGenerateMaster.disabled = true;
+        elements.btnGenerateMaster.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> <span>${text}</span>`;
+      } else {
+        elements.btnGenerateMaster.disabled = false;
+        elements.btnGenerateMaster.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> <span>Analisis & Buat Master Prompt</span>`;
+      }
+    }
+
+    function showToast(message, type = 'info') {
+      const toastContainer = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+
+      const bgColors = {
+        success: 'bg-emerald-900/90 border-emerald-500/50 text-emerald-200',
+        error: 'bg-rose-900/90 border-rose-500/50 text-rose-200',
+        warning: 'bg-amber-900/90 border-amber-500/50 text-amber-200',
+        info: 'bg-slate-800/90 border-slate-700 text-slate-200'
+      };
+
+      const icons = {
+        success: 'fa-circle-check text-emerald-400',
+        error: 'fa-circle-xmark text-rose-400',
+        warning: 'fa-triangle-exclamation text-amber-400',
+        info: 'fa-circle-info text-brand-400'
+      };
+
+      toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl border ${bgColors[type] || bgColors.info} backdrop-blur-md shadow-2xl text-xs font-medium transition-all transform duration-300 translate-y-[-10px] opacity-0 max-w-sm`;
+      toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i> <span>${escapeHtml(message)}</span>`;
+
+      toastContainer.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-[-10px]', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-[-10px]');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
+```
